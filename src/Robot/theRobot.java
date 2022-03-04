@@ -1,17 +1,13 @@
 package Robot;
 import javafx.util.Pair;
 
-import javax.swing.*;
 import java.awt.event.*;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.lang.*;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
-import java.util.Random;
-import java.util.Scanner;
 import java.net.*;
 
 // This class draws the probability map and value iteration map that you create to the window
@@ -254,6 +250,7 @@ public class theRobot extends JFrame {
     public static final int TRAP = 2;
     public static final int GOAL = 3;
 
+    public static final int NUM_DIRECTIONS = 4;
 
 
     Color bkgroundColor = new Color(230,230,230);
@@ -413,24 +410,7 @@ public class theRobot extends JFrame {
     }
 
     Pair<Integer, Integer> simulateMove(Pair<Integer, Integer> originalPosition, int direction){
-        Pair<Integer, Integer> newPosition = new Pair(-1, -1);
-        switch(direction){
-            case NORTH:
-                newPosition = new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
-                break;
-            case SOUTH:
-                newPosition = new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
-                break;
-            case EAST:
-                newPosition = new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
-                break;
-            case WEST:
-                newPosition = new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
-                break;
-            case STAY:
-                newPosition = originalPosition;
-                break;
-        }
+        Pair<Integer, Integer> newPosition = getNewPosition(originalPosition, direction);
 
         int newPositionType = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
 
@@ -448,7 +428,22 @@ public class theRobot extends JFrame {
 //        }
     }
 
-    double transitionModel(Pair<Integer, Integer> currentState, int action, Pair<Integer, Integer> previousState) {
+    private Pair<Integer, Integer> getNewPosition(Pair<Integer, Integer> originalPosition, int direction) {
+        switch(direction){
+            case NORTH:
+                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
+            case SOUTH:
+                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
+            case EAST:
+                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
+            case WEST:
+                return new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
+            default: // STAY
+                return originalPosition;
+        }
+    }
+
+    double transitionModel(Pair<Integer, Integer> destinationState, int action, Pair<Integer, Integer> previousState) {
         double transitionProbability = 0;
 
         for(int direction = 0; direction < 5; direction++){
@@ -467,11 +462,11 @@ public class theRobot extends JFrame {
             }
             catch (Exception e){
 //                System.out.println(e);
-                System.out.println("Invalid move: " + previousState.getKey() + " " + previousState.getValue() + " " + direction);
+//                System.out.println("Invalid move: " + previousState.getKey() + " " + previousState.getValue() + " " + direction);
                 continue;
             }
 
-            if(calculatedNewPos.getKey().equals(currentState.getKey()) && calculatedNewPos.getValue().equals(currentState.getValue())){  // If the move gets up to the desired position then sum probability
+            if(calculatedNewPos.getKey().equals(destinationState.getKey()) && calculatedNewPos.getValue().equals(destinationState.getValue())){  // If the move gets up to the desired position then sum probability
                 transitionProbability += directionProbability;
             }
             //TODO: update neighours also (pass in _bar) - I don't think so
@@ -480,7 +475,42 @@ public class theRobot extends JFrame {
         return transitionProbability;
     }
 
-      // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
+    boolean typesMatch(int type1, int type2){
+        if(type1 == type2){ // Both walls or both open
+            return true;
+        }
+        if(type1 == OPEN && (type2 == TRAP || type2 == GOAL)){
+            return true;
+        }
+        return false;
+    }
+
+    double sensorModel(Pair<Integer, Integer> position, String sonars) {
+        int numCorrectReadings = 0;
+
+        //Figure out how many of the sensor reads would be correct, given position
+        for(int direction = 0; direction < 4; direction++){
+            Pair<Integer, Integer> newPosition = getNewPosition(position, direction);
+
+            int type = -1;
+
+            try{
+                type = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
+            }
+            catch (Exception e){
+                continue;
+            }
+
+            if(typesMatch(type, Character.getNumericValue(sonars.charAt(direction)))){ //TODO: test that char at works
+                numCorrectReadings += 1;
+            }
+        }
+
+        return (sensorAccuracy * numCorrectReadings) *
+                (((1 - sensorAccuracy) * (NUM_DIRECTIONS - numCorrectReadings)));
+    }
+
+    // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
     //       To do this, you should update the 2D-array "probs"
     // Note: sonars is a bit string with four characters, specifying the sonar reading in the direction of North, South, East, and West
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
@@ -494,32 +524,31 @@ public class theRobot extends JFrame {
                 for (int i = 0; i < mundo.height; i++) {
                     for (int j = 0; j < mundo.width; j++) { //To
                         probs_bar[j][i] += transitionModel(new Pair<>(j, i), action, new Pair<>(x, y)) * probs[x][y];
-                        System.out.println("transitionModel(new Pair<>(j, i), action, new Pair<>(x, y)))" + transitionModel(new Pair<>(j, i), action, new Pair<>(x, y)));
-                        System.out.println("probs[x][y]" + probs[x][y]);
-
-
-                        System.out.println(probs_bar[j][i]);
                     }
                 }
 
-                //probs[x][y] = sensorModel(Pair(x, y)) * probs_bar[x][y]; //TODO: sensor model here (don't sum, multiply)
-                //TODO: Normalize probs vector (sum to find mag, divide everthing by mag
+                probs[x][y] = sensorModel(new Pair<>(x, y), sonars) * probs_bar[x][y]; //TODO: (don't sum, multiply)
             }
         }
 
-        double sum = 0;
-        for (int y = 0; y < mundo.height; y++){  //From
-            for (int x = 0; x < mundo.width; x++) {
-                sum += probs_bar[x][y];
-            }
-        }
-        System.out.println("sum : " + sum);
-
+        normalizeProbabilityVector();
         myMaps.updateProbs(probs_bar); // call this function after updating your probabilities so that the //todo change back to probs
                                    //  new probabilities will show up in the probability map on the GUI
     }
 
-
+    private void normalizeProbabilityVector() {
+        double magnitude = 0;
+        for (int y = 0; y < mundo.height; y++){  //From
+            for (int x = 0; x < mundo.width; x++) {
+                magnitude += probs[x][y];
+            }
+        }
+        for (int y = 0; y < mundo.height; y++){  //From
+            for (int x = 0; x < mundo.width; x++) {
+                probs[x][y] = probs[x][y] * (1 / magnitude);
+            }
+        }
+    }
 
     // This is the function you'd need to write to make the robot move using your AI;
     // You do NOT need to write this function for this lab; it can remain as is
