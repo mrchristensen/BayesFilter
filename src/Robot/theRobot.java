@@ -409,6 +409,20 @@ public class theRobot extends JFrame {
         myMaps.updateProbs(probs);
     }
 
+    private void normalizeProbabilityVector() {
+        double magnitude = 0;
+        for (int y = 0; y < mundo.height; y++){  //From
+            for (int x = 0; x < mundo.width; x++) {
+                magnitude += probs[x][y];
+            }
+        }
+        for (int y = 0; y < mundo.height; y++){  //From
+            for (int x = 0; x < mundo.width; x++) {
+                probs[x][y] = probs[x][y] * (1 / magnitude);
+            }
+        }
+    }
+
     Pair<Integer, Integer> simulateMove(Pair<Integer, Integer> originalPosition, int direction){
         Pair<Integer, Integer> newPosition = getNewPosition(originalPosition, direction);
 
@@ -443,6 +457,16 @@ public class theRobot extends JFrame {
         }
     }
 
+    boolean typesMatch(int type1, int type2){
+        if(type1 == type2){ // Both walls or both open
+            return true;
+        }
+        if(type1 == OPEN && (type2 == TRAP || type2 == GOAL)){
+            return true;
+        }
+        return false;
+    }
+
     double transitionModel(Pair<Integer, Integer> destinationState, int action, Pair<Integer, Integer> previousState) {
         double transitionProbability = 0;
 
@@ -473,16 +497,6 @@ public class theRobot extends JFrame {
         }
 
         return transitionProbability;
-    }
-
-    boolean typesMatch(int type1, int type2){
-        if(type1 == type2){ // Both walls or both open
-            return true;
-        }
-        if(type1 == OPEN && (type2 == TRAP || type2 == GOAL)){
-            return true;
-        }
-        return false;
     }
 
     double sensorModel(Pair<Integer, Integer> position, String sonars) {
@@ -532,22 +546,8 @@ public class theRobot extends JFrame {
         }
 
         normalizeProbabilityVector();
-        myMaps.updateProbs(probs_bar); // call this function after updating your probabilities so that the //todo change back to probs
+        myMaps.updateProbs(probs); // call this function after updating your probabilities so that the //todo change back to probs
                                    //  new probabilities will show up in the probability map on the GUI
-    }
-
-    private void normalizeProbabilityVector() {
-        double magnitude = 0;
-        for (int y = 0; y < mundo.height; y++){  //From
-            for (int x = 0; x < mundo.width; x++) {
-                magnitude += probs[x][y];
-            }
-        }
-        for (int y = 0; y < mundo.height; y++){  //From
-            for (int x = 0; x < mundo.width; x++) {
-                probs[x][y] = probs[x][y] * (1 / magnitude);
-            }
-        }
     }
 
     // This is the function you'd need to write to make the robot move using your AI;
