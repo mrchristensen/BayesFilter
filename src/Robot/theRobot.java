@@ -1,4 +1,6 @@
 package Robot;
+import javafx.util.Pair;
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.Color;
@@ -11,7 +13,6 @@ import java.io.*;
 import java.util.Random;
 import java.util.Scanner;
 import java.net.*;
-
 
 // This class draws the probability map and value iteration map that you create to the window
 // You need only call updateProbs() and updateValues() from your theRobot class to update these maps
@@ -247,6 +248,14 @@ public class theRobot extends JFrame {
     public static final int WEST = 3;
     public static final int STAY = 4;
 
+
+    public static final int OPEN = 0;
+    public static final int WALL = 1;
+    public static final int TRAP = 2;
+    public static final int GOAL = 3;
+
+
+
     Color bkgroundColor = new Color(230,230,230);
     
     static mySmartMap myMaps; // instance of the class that draw everything to the GUI
@@ -402,12 +411,86 @@ public class theRobot extends JFrame {
         
         myMaps.updateProbs(probs);
     }
+
+    Pair<Integer, Integer> simulateMove(Pair<Integer, Integer> originalPosition, int direction){
+        Pair<Integer, Integer> newPosition = new Pair(-1, -1);
+        switch(direction){
+            case NORTH:
+                newPosition = new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
+                break;
+            case SOUTH:
+                newPosition = new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
+                break;
+            case EAST:
+                newPosition = new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
+                break;
+            case WEST:
+                newPosition = new Pair(originalPosition.getKey() - 1, originalPosition.getValue() - 1);
+                break;
+            case STAY:
+                newPosition = originalPosition;
+                break;
+        }
+
+        int newPositionType = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
+
+        if(newPositionType == WALL){
+            return originalPosition;
+        }
+        else if(newPositionType == OPEN){
+            return newPosition;
+        }
+        else if(newPositionType == TRAP){
+            return newPosition; //TODO: check to make sure this is right
+        }
+//        else if(newPositionType == GOAL){
+        return newPosition; //TODO: check to make sure this is right
+//        }
+    }
+
+    double transitionModel(Pair<Integer, Integer> currentState, int action, Pair<Integer, Integer> previousState) {
+        double transitionProbability = 0;
+
+        for(int direction = 0; direction < 5; direction++){
+            double directionProbability = 0;
+
+            if(action == direction){
+                directionProbability = moveProb;
+            }
+            else{
+                directionProbability = (1 - moveProb)/4;
+            }
+
+            Pair<Integer, Integer> calculatedNewPos = simulateMove(previousState, direction);
+
+            if(calculatedNewPos.equals(currentState)){  // If the move gets up to the desired position then sum probability
+                transitionProbability += directionProbability;
+            }
+        }
+
+        return transitionProbability;
+    }
+
       // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
     //       To do this, you should update the 2D-array "probs"
     // Note: sonars is a bit string with four characters, specifying the sonar reading in the direction of North, South, East, and West
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
     void updateProbabilities(int action, String sonars) {
-        // your code
+
+        // Bayes Filter
+        for (int i = 0; i < mundo.height; i++){
+            for (int j = 0; j < mundo.width; j++){
+
+                for (int k = 0; k < mundo.height; k++) {
+                    for (int l = 0; l < mundo.width; l++) {
+                        probs[l][k] = transitionModel(new Pair<>(l, k), action, new Pair<>(j, i)) * probs[j][i]; //TODO: Check second half of this equation
+                    }
+                }
+
+                //probs[j][i] = sensorModel(Pair(j, i)) * probs[j][i]; //TODO: sensor model here
+                //TODO: Normalize probs vector (sum to find mag, divide everthing by mag
+            }
+        }
 
         myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
