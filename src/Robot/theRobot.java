@@ -515,13 +515,13 @@ public class theRobot extends JFrame {
                 continue;
             }
 
-            if(typesMatch(type, Character.getNumericValue(sonars.charAt(direction)))){ //TODO: test that char at works
+            if(typesMatch(type, Character.getNumericValue(sonars.charAt(direction)))){
                 numCorrectReadings += 1;
             }
         }
 
-        return (sensorAccuracy * numCorrectReadings) *
-                (((1 - sensorAccuracy) * (NUM_DIRECTIONS - numCorrectReadings)));
+        return (Math.pow(sensorAccuracy, numCorrectReadings)) *
+                (Math.pow((1 - sensorAccuracy), (NUM_DIRECTIONS - numCorrectReadings)));
     }
 
     // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
@@ -541,12 +541,12 @@ public class theRobot extends JFrame {
                     }
                 }
 
-                probs[x][y] = sensorModel(new Pair<>(x, y), sonars) * probs_bar[x][y]; //TODO: (don't sum, multiply)
+                probs[x][y] = sensorModel(new Pair<>(x, y), sonars) * probs_bar[x][y];
             }
         }
 
         normalizeProbabilityVector();
-        myMaps.updateProbs(probs); // call this function after updating your probabilities so that the //todo change back to probs
+        myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
     }
 
