@@ -409,19 +409,29 @@ public class theRobot extends JFrame {
         myMaps.updateProbs(probs);
     }
 
-    private void normalizeProbabilityVector() {
+    private double getMagnitude(double[][] vector) {
         double magnitude = 0;
-        for (int y = 0; y < mundo.height; y++){  //From
+        for (int y = 0; y < mundo.height; y++) {  //From
             for (int x = 0; x < mundo.width; x++) {
-                magnitude += probs[x][y];
+                magnitude += vector[x][y];
             }
         }
-        for (int y = 0; y < mundo.height; y++){  //From
+        return magnitude;
+    }
+    private void normalizeProbabilityVector() {
+        double magnitude = getMagnitude(probs);
+        System.out.println("magnitude: (before)\n" + magnitude);
+
+        for (int y = 0; y < mundo.height; y++){  // Iterate through the array and normalize each value
             for (int x = 0; x < mundo.width; x++) {
                 probs[x][y] = probs[x][y] * (1 / magnitude);
             }
         }
+
+        System.out.println("magnitude: (after)\n" + getMagnitude(probs)); //TODO Get rid of this
+
     }
+
 
     Pair<Integer, Integer> simulateMove(Pair<Integer, Integer> originalPosition, int direction){
         Pair<Integer, Integer> newPosition = getNewPosition(originalPosition, direction);
@@ -545,6 +555,7 @@ public class theRobot extends JFrame {
             }
         }
 
+        System.out.println("getMagnitude(probs_bar): " + getMagnitude(probs_bar));
         normalizeProbabilityVector();
         myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
