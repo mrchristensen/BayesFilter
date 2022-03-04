@@ -425,7 +425,7 @@ public class theRobot extends JFrame {
                 newPosition = new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
                 break;
             case WEST:
-                newPosition = new Pair(originalPosition.getKey() - 1, originalPosition.getValue() - 1);
+                newPosition = new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
                 break;
             case STAY:
                 newPosition = originalPosition;
@@ -441,10 +441,10 @@ public class theRobot extends JFrame {
             return newPosition;
         }
         else if(newPositionType == TRAP){
-            return newPosition; //TODO: check to make sure this is right
+            return new Pair<>(-1, -1); //TODO: check to make sure this is right
         }
 //        else if(newPositionType == GOAL){
-        return newPosition; //TODO: check to make sure this is right
+        return new Pair<>(-1, -1); //TODO: check to make sure this is right
 //        }
     }
 
@@ -461,11 +461,20 @@ public class theRobot extends JFrame {
                 directionProbability = (1 - moveProb)/4;
             }
 
-            Pair<Integer, Integer> calculatedNewPos = simulateMove(previousState, direction);
+            Pair<Integer, Integer> calculatedNewPos;
+            try{
+                calculatedNewPos = simulateMove(previousState, direction);
+            }
+            catch (Exception e){
+//                System.out.println(e);
+                System.out.println("Invalid move: " + previousState.getKey() + " " + previousState.getValue() + " " + direction);
+                continue;
+            }
 
-            if(calculatedNewPos.equals(currentState)){  // If the move gets up to the desired position then sum probability
+            if(calculatedNewPos.getKey().equals(currentState.getKey()) && calculatedNewPos.getValue().equals(currentState.getValue())){  // If the move gets up to the desired position then sum probability
                 transitionProbability += directionProbability;
             }
+            //TODO: update neighours also (pass in _bar) - I don't think so
         }
 
         return transitionProbability;
@@ -476,23 +485,37 @@ public class theRobot extends JFrame {
     // Note: sonars is a bit string with four characters, specifying the sonar reading in the direction of North, South, East, and West
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
     void updateProbabilities(int action, String sonars) {
+        double[][] probs_bar = new double[mundo.width][mundo.height];
 
         // Bayes Filter
-        for (int i = 0; i < mundo.height; i++){
-            for (int j = 0; j < mundo.width; j++){
+        for (int y = 0; y < mundo.height; y++){  //From
+            for (int x = 0; x < mundo.width; x++){
 
-                for (int k = 0; k < mundo.height; k++) {
-                    for (int l = 0; l < mundo.width; l++) {
-                        probs[l][k] = transitionModel(new Pair<>(l, k), action, new Pair<>(j, i)) * probs[j][i]; //TODO: Check second half of this equation
+                for (int i = 0; i < mundo.height; i++) {
+                    for (int j = 0; j < mundo.width; j++) { //To
+                        probs_bar[j][i] += transitionModel(new Pair<>(j, i), action, new Pair<>(x, y)) * probs[x][y];
+                        System.out.println("transitionModel(new Pair<>(j, i), action, new Pair<>(x, y)))" + transitionModel(new Pair<>(j, i), action, new Pair<>(x, y)));
+                        System.out.println("probs[x][y]" + probs[x][y]);
+
+
+                        System.out.println(probs_bar[j][i]);
                     }
                 }
 
-                //probs[j][i] = sensorModel(Pair(j, i)) * probs[j][i]; //TODO: sensor model here
+                //probs[x][y] = sensorModel(Pair(x, y)) * probs_bar[x][y]; //TODO: sensor model here (don't sum, multiply)
                 //TODO: Normalize probs vector (sum to find mag, divide everthing by mag
             }
         }
 
-        myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
+        double sum = 0;
+        for (int y = 0; y < mundo.height; y++){  //From
+            for (int x = 0; x < mundo.width; x++) {
+                sum += probs_bar[x][y];
+            }
+        }
+        System.out.println("sum : " + sum);
+
+        myMaps.updateProbs(probs_bar); // call this function after updating your probabilities so that the //todo change back to probs
                                    //  new probabilities will show up in the probability map on the GUI
     }
 
