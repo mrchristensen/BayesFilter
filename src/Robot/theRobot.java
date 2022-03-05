@@ -452,6 +452,7 @@ public class theRobot extends JFrame {
 //        }
     }
 
+    //Get the square in a given direction from a position
     private Pair<Integer, Integer> getNewPosition(Pair<Integer, Integer> originalPosition, int direction) {
         switch(direction){
             case NORTH:
@@ -471,7 +472,7 @@ public class theRobot extends JFrame {
         if(type1 == type2){ // Both walls or both open
             return true;
         }
-        if(type1 == OPEN && (type2 == TRAP || type2 == GOAL)){
+        if(type1 == OPEN && (type2 == TRAP || type2 == GOAL)){ // OPEN includes GOAL and WALL
             return true;
         }
         return false;
@@ -512,18 +513,24 @@ public class theRobot extends JFrame {
     double sensorModel(Pair<Integer, Integer> position, String sonars) {
         int numCorrectReadings = 0;
 
+        // Return 0 if we are trying a wall, trap or goal
+        int currentType = myMaps.mundo.grid[position.getKey()][position.getValue()];
+        if(currentType == WALL || currentType == TRAP || currentType == GOAL){
+            return 0;
+        }
+
         //Figure out how many of the sensor reads would be correct, given position
         for(int direction = 0; direction < 4; direction++){
             Pair<Integer, Integer> newPosition = getNewPosition(position, direction);
 
             int type = -1;
 
-            try{
-                type = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
-            }
-            catch (Exception e){
-                continue;
-            }
+//            try{
+            type = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
+//            }
+//            catch (Exception e){
+//                continue;
+//            }
 
             if(typesMatch(type, Character.getNumericValue(sonars.charAt(direction)))){
                 numCorrectReadings += 1;
