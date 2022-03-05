@@ -1,9 +1,17 @@
+# Recordings
 
-
-
-
-![alt text]("gifs/mundo_maze.txt .95 .9 unknown.gif" "Logo Title Text 1")
 ![](https://github.com/mrchristensen/BayesFilter/blob/e2047df0899367f2f25d1b66eae58381aee3b396/gifs/mundo_maze.txt%20.95%20.9%20unknown.gif)
+### mundo_maze.txt .95 .9 unknown
+
+![](https://github.com/mrchristensen/BayesFilter/blob/master/gifs/mundo_maze2.txt%20.8%20.8%20unknown.gif)
+### mundo_maze2.txt .8 .8 unknown
+
+![](https://github.com/mrchristensen/BayesFilter/blob/master/gifs/mundo_15_15.txt%20.9%20.9%20unknown.gif)
+### mundo_15_15.txt .9 .9 unknown
+
+![](https://github.com/mrchristensen/BayesFilter/blob/master/gifs/mundo_30_30.txt%20.85%20.8%20unknown.gif)
+### mundo_30_30.txt .85 .8 unknown
+
 
 ## Remember
 
