@@ -1,3 +1,10 @@
+
+
+
+
+![alt text]("gifs/mundo_maze.txt .95 .9 unknown.gif" "Logo Title Text 1")
+![](https://github.com/Your_Repository_Name/Your_GIF_Name.gif)
+
 ## Remember
 
 0's are open
