@@ -418,17 +418,17 @@ public class theRobot extends JFrame {
         }
         return magnitude;
     }
-    private void normalizeProbabilityVector() {
-        double magnitude = getMagnitude(probs);
+    private void normalizeProbabilityVector(double[][] array) {
+        double magnitude = getMagnitude(array);
         System.out.println("magnitude: (before)\n" + magnitude);
 
         for (int y = 0; y < mundo.height; y++){  // Iterate through the array and normalize each value
             for (int x = 0; x < mundo.width; x++) {
-                probs[x][y] = probs[x][y] * (1 / magnitude);
+                array[x][y] = array[x][y] * (1 / magnitude);
             }
         }
 
-        System.out.println("magnitude: (after)\n" + getMagnitude(probs)); //TODO Get rid of this
+        System.out.println("magnitude: (after)\n" + getMagnitude(array)); //TODO Get rid of this
 
     }
 
@@ -455,24 +455,14 @@ public class theRobot extends JFrame {
     //Get the square in a given direction from a position
     private Pair<Integer, Integer> getNewPosition(Pair<Integer, Integer> originalPosition, int direction) {
         switch(direction){
-//            case NORTH:
-//                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
-//            case SOUTH:
-//                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
-//            case EAST:
-//                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
-//            case WEST:
-//                return new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
-//            default: // STAY
-//                return originalPosition;
-            case WEST:
-                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
-            case EAST:
-                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
-            case SOUTH:
-                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
             case NORTH:
                 return new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
+            case SOUTH:
+                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
+            case EAST:
+                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
+            case WEST:
+                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
             default: // STAY
                 return originalPosition;
         }
@@ -490,6 +480,7 @@ public class theRobot extends JFrame {
 
     boolean impossiblePosition(Pair<Integer, Integer> position){
         int type = myMaps.mundo.grid[position.getKey()][position.getValue()];
+
         if(type == WALL || type == TRAP || type == GOAL){
             return true;
         }
@@ -524,7 +515,7 @@ public class theRobot extends JFrame {
             if(calculatedNewPos.getKey().equals(destinationState.getKey()) && calculatedNewPos.getValue().equals(destinationState.getValue())){  // If the move gets up to the desired position then sum probability
                 transitionProbability += directionProbability;
             }
-            //TODO: update neighours also (pass in _bar) - I don't think so
+
         }
 
         return transitionProbability;
@@ -552,8 +543,7 @@ public class theRobot extends JFrame {
                 (Math.pow((1 - sensorAccuracy), (NUM_DIRECTIONS - numCorrectReadings)));
     }
 
-    // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
-    //       To do this, you should update the 2D-array "probs"
+    // Updates the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
     // Note: sonars is a bit string with four characters, specifying the sonar reading in the direction of North, South, East, and West
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
     void updateProbabilities(int action, String sonars) {
@@ -569,12 +559,17 @@ public class theRobot extends JFrame {
                     }
                 }
 
+            }
+        }
+
+        for (int y = 0; y < mundo.height; y++){
+            for (int x = 0; x < mundo.width; x++) {
                 probs[x][y] = sensorModel(new Pair<>(x, y), sonars) * probs_bar[x][y];
             }
         }
 
-        System.out.println("getMagnitude(probs_bar): " + getMagnitude(probs_bar));
-        normalizeProbabilityVector();
+        normalizeProbabilityVector(probs);
+
         myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
                                    //  new probabilities will show up in the probability map on the GUI
     }

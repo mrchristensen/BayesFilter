@@ -14,3 +14,11 @@ STAY = 4
 sonar string 1001, specifies:
 wall in the North and West directions
 but not in the South and East directions
+
+
+
+Thinks:
+up is left
+Right is down,
+Down if right
+Left is up
