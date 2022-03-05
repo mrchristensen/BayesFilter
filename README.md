@@ -3,7 +3,7 @@
 
 
 ![alt text]("gifs/mundo_maze.txt .95 .9 unknown.gif" "Logo Title Text 1")
-![](https://github.com/Your_Repository_Name/Your_GIF_Name.gif)
+![](https://github.com/mrchristensen/BayesFilter/blob/e2047df0899367f2f25d1b66eae58381aee3b396/gifs/mundo_maze.txt%20.95%20.9%20unknown.gif)
 
 ## Remember
 
