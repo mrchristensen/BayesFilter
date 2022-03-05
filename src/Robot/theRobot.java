@@ -455,13 +455,23 @@ public class theRobot extends JFrame {
     //Get the square in a given direction from a position
     private Pair<Integer, Integer> getNewPosition(Pair<Integer, Integer> originalPosition, int direction) {
         switch(direction){
-            case NORTH:
-                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
-            case SOUTH:
-                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
-            case EAST:
-                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
+//            case NORTH:
+//                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
+//            case SOUTH:
+//                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
+//            case EAST:
+//                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
+//            case WEST:
+//                return new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
+//            default: // STAY
+//                return originalPosition;
             case WEST:
+                return new Pair(originalPosition.getKey() - 1, originalPosition.getValue());  // TODO: check to make sure we are indexing correctly
+            case EAST:
+                return new Pair(originalPosition.getKey() + 1, originalPosition.getValue());
+            case SOUTH:
+                return new Pair(originalPosition.getKey(), originalPosition.getValue() + 1);
+            case NORTH:
                 return new Pair(originalPosition.getKey(), originalPosition.getValue() - 1);
             default: // STAY
                 return originalPosition;
@@ -478,11 +488,23 @@ public class theRobot extends JFrame {
         return false;
     }
 
+    boolean impossiblePosition(Pair<Integer, Integer> position){
+        int type = myMaps.mundo.grid[position.getKey()][position.getValue()];
+        if(type == WALL || type == TRAP || type == GOAL){
+            return true;
+        }
+        return false;
+    }
+
     double transitionModel(Pair<Integer, Integer> destinationState, int action, Pair<Integer, Integer> previousState) {
         double transitionProbability = 0;
 
+        if(impossiblePosition(destinationState)){  // Return 0 if we are trying a wall, trap or goal
+            return 0;
+        }
+
         for(int direction = 0; direction < 5; direction++){
-            double directionProbability = 0;
+            double directionProbability;
 
             if(action == direction){
                 directionProbability = moveProb;
@@ -496,8 +518,6 @@ public class theRobot extends JFrame {
                 calculatedNewPos = simulateMove(previousState, direction);
             }
             catch (Exception e){
-//                System.out.println(e);
-//                System.out.println("Invalid move: " + previousState.getKey() + " " + previousState.getValue() + " " + direction);
                 continue;
             }
 
@@ -513,9 +533,7 @@ public class theRobot extends JFrame {
     double sensorModel(Pair<Integer, Integer> position, String sonars) {
         int numCorrectReadings = 0;
 
-        // Return 0 if we are trying a wall, trap or goal
-        int currentType = myMaps.mundo.grid[position.getKey()][position.getValue()];
-        if(currentType == WALL || currentType == TRAP || currentType == GOAL){
+        if(impossiblePosition(position)){  // Return 0 if we are trying a wall, trap or goal
             return 0;
         }
 
@@ -523,14 +541,7 @@ public class theRobot extends JFrame {
         for(int direction = 0; direction < 4; direction++){
             Pair<Integer, Integer> newPosition = getNewPosition(position, direction);
 
-            int type = -1;
-
-//            try{
-            type = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
-//            }
-//            catch (Exception e){
-//                continue;
-//            }
+            int type = myMaps.mundo.grid[newPosition.getKey()][newPosition.getValue()];
 
             if(typesMatch(type, Character.getNumericValue(sonars.charAt(direction)))){
                 numCorrectReadings += 1;
