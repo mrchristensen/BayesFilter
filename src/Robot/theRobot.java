@@ -9,6 +9,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 
 // This class draws the probability map and value iteration map that you create to the window
 // You need only call updateProbs() and updateValues() from your theRobot class to update these maps
@@ -250,18 +251,26 @@ public class theRobot extends JFrame {
     public static final int TRAP = 2;
     public static final int GOAL = 3;
 
+    public static final int OPEN_UTILITY = 0;
+    public static final int WALL_UTILITY = -100;
+    public static final int GOAL_UTILITY = 10000;
+    public static final int TRAP_UTILITY = -10000;
+
+
     public static final int NUM_DIRECTIONS = 4;
 
 
     Color bkgroundColor = new Color(230,230,230);
-    
+
     static mySmartMap myMaps; // instance of the class that draw everything to the GUI
     String mundoName;
-    
+
+    double[][] utilMap;
     World mundo; // mundo contains all the information about the world.  See World.java
     double moveProb, sensorAccuracy;  // stores probabilies that the robot moves in the intended direction
                                       // and the probability that a sonar reading is correct, respectively
-    
+
+
     // variables to communicate with the Server via sockets
     public Socket s;
 	public BufferedReader sin;
@@ -292,7 +301,9 @@ public class theRobot extends JFrame {
     
         // Read in the world
         mundo = new World(mundoName);
-        
+
+        utilMap = new double[mundo.width][mundo.height];
+
         // set up the GUI that displays the information you compute
         int width = 500;
         int height = 500;
@@ -580,11 +591,96 @@ public class theRobot extends JFrame {
         
         return STAY;  // default action for now
     }
+
+    //floor = 0
+    //wall = 1
+    //stairs = 2
+    //charger = 3
+
+    boolean isPlayable(int type){
+        if(type == WALL){
+            return false;
+        }
+        return true;
+    }
+
+    void valueIteration() {
+        boolean updatedUtilities = true;
+
+        for (int y = 0; y < mundo.height; y++) {
+            for (int x = 0; x < mundo.width; x++) {
+                if(mundo.grid[x][y] == OPEN) {
+                    utilMap[x][y] = OPEN_UTILITY;
+                }
+                if(mundo.grid[x][y] == TRAP) {
+                    utilMap[x][y] = TRAP_UTILITY;
+                }
+                if(mundo.grid[x][y] == GOAL) {
+                    utilMap[x][y] = GOAL_UTILITY;
+                }
+            }
+        }
+
+        while(updatedUtilities) {
+            updatedUtilities = false;
+
+            double[][] newUtilMap = Arrays.stream(utilMap).map(double[]::clone).toArray(double[][]::new);
+
+            for (int y = 0; y < mundo.height; y++) {
+                for (int x = 0; x < mundo.width; x++) {
+
+                    double bestFutureUtility = Double.NEGATIVE_INFINITY;
+
+                    if(mundo.grid[x][y] != OPEN){ // Only update utility of of floors
+                        continue;
+                    }
+
+                    if(y > 0) {  // check up
+                        if(isPlayable(mundo.grid[x][y-1]) && utilMap[x][y-1] > bestFutureUtility) {
+                            bestFutureUtility = utilMap[x][y-1];
+                            updatedUtilities = true;
+                        }
+                    }
+
+                    if(x < mundo.width - 1) {  //check right
+                        if(isPlayable(mundo.grid[x + 1][y]) && utilMap[x + 1][y] > bestFutureUtility) {
+                            bestFutureUtility = utilMap[x + 1][y];
+                            updatedUtilities = true;
+                        }
+                    }
+
+                      if(x > 0) {  //check left
+                        if(isPlayable(mundo.grid[x - 1][y]) && utilMap[x - 1][y] > bestFutureUtility) {
+                            bestFutureUtility = utilMap[x - 1][y];
+                            updatedUtilities = true;
+                        }
+                    }
+                    if(y < mundo.height - 1) {  // check down
+                        if(isPlayable(mundo.grid[x][y+1]) && utilMap[x][y+1] > bestFutureUtility) {
+                            bestFutureUtility = utilMap[x][y+1];
+                            updatedUtilities = true;
+                        }
+                    }
+
+                    if(utilMap[x][y] > bestFutureUtility) {  // check stay
+                        bestFutureUtility = utilMap[x][y];
+                        updatedUtilities = true;
+                    }
+
+
+                    newUtilMap[x][y] = utilMap[x][y] + bestFutureUtility;
+                }
+            }
+            utilMap = newUtilMap;
+        }
+    }
+
+
     
     void doStuff() {
         int action;
         
-        //valueIteration();  // TODO: function you will write in Part II of the lab
+        valueIteration();  // TODO: function you will write in Part II of the lab
         initializeProbabilities();  // Initializes the location (probability) map
         
         while (true) {
