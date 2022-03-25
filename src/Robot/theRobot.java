@@ -251,8 +251,7 @@ public class theRobot extends JFrame {
     public static final int TRAP = 2;
     public static final int GOAL = 3;
 
-    public static final int OPEN_UTILITY = 0;
-    public static final int WALL_UTILITY = -100;
+    public static final int OPEN_UTILITY = -1;
     public static final int GOAL_UTILITY = 10000;
     public static final int TRAP_UTILITY = -10000;
 
@@ -610,7 +609,7 @@ public class theRobot extends JFrame {
         for (int y = 0; y < mundo.height; y++) {
             for (int x = 0; x < mundo.width; x++) {
                 if(mundo.grid[x][y] == OPEN) {
-                    utilMap[x][y] = OPEN_UTILITY;
+                    utilMap[x][y] = 0;
                 }
                 if(mundo.grid[x][y] == TRAP) {
                     utilMap[x][y] = TRAP_UTILITY;
@@ -636,7 +635,7 @@ public class theRobot extends JFrame {
                     }
 
                     if(y > 0) {  // check up
-                        if(isPlayable(mundo.grid[x][y-1]) && utilMap[x][y-1] > bestFutureUtility) {
+                        if(isPlayable(mundo.grid[x][y-1]) && utilMap[x][y-1] > OPEN_UTILITY + bestFutureUtility) {
                             bestFutureUtility = utilMap[x][y-1];
                             updatedUtilities = true;
                         }
@@ -650,25 +649,27 @@ public class theRobot extends JFrame {
                     }
 
                       if(x > 0) {  //check left
-                        if(isPlayable(mundo.grid[x - 1][y]) && utilMap[x - 1][y] > bestFutureUtility) {
+                        if(isPlayable(mundo.grid[x - 1][y]) && utilMap[x - 1][y] > OPEN_UTILITY + bestFutureUtility) {
                             bestFutureUtility = utilMap[x - 1][y];
                             updatedUtilities = true;
                         }
                     }
                     if(y < mundo.height - 1) {  // check down
-                        if(isPlayable(mundo.grid[x][y+1]) && utilMap[x][y+1] > bestFutureUtility) {
+                        if(isPlayable(mundo.grid[x][y+1]) && utilMap[x][y+1] > OPEN_UTILITY + bestFutureUtility) {
                             bestFutureUtility = utilMap[x][y+1];
                             updatedUtilities = true;
                         }
                     }
 
-                    if(utilMap[x][y] > bestFutureUtility) {  // check stay
+                    if(utilMap[x][y] > OPEN_UTILITY + bestFutureUtility) {  // check stay  // todo: do we need this?
                         bestFutureUtility = utilMap[x][y];
                         updatedUtilities = true;
                     }
 
+                    if(bestFutureUtility != Double.NEGATIVE_INFINITY) {  // If we found a better route (utility) then update our utility value
+                        newUtilMap[x][y] = OPEN_UTILITY + bestFutureUtility;  // Add immediate and future reward (current has to be a floor space)
+                    }
 
-                    newUtilMap[x][y] = utilMap[x][y] + bestFutureUtility;
                 }
             }
             utilMap = newUtilMap;
