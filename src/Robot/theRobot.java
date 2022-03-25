@@ -428,6 +428,7 @@ public class theRobot extends JFrame {
         }
         return magnitude;
     }
+
     private void normalizeProbabilityVector(double[][] array) {
         double magnitude = getMagnitude(array);
         System.out.println("magnitude: (before)\n" + magnitude);
@@ -455,10 +456,10 @@ public class theRobot extends JFrame {
             return newPosition;
         }
         else if(newPositionType == TRAP){
-            return new Pair<>(-1, -1); //TODO: check to make sure this is right
+            return newPosition; //TODO: check to make sure this is right (should we )
         }
 //        else if(newPositionType == GOAL){
-        return new Pair<>(-1, -1); //TODO: check to make sure this is right
+        return newPosition; //TODO: check to make sure this is right
 //        }
     }
 
@@ -491,9 +492,13 @@ public class theRobot extends JFrame {
     boolean impossiblePosition(Pair<Integer, Integer> position){
         int type = myMaps.mundo.grid[position.getKey()][position.getValue()];
 
-        if(type == WALL || type == TRAP || type == GOAL){
+//        if(type == WALL || type == TRAP || type == GOAL){ //todo: make sure this is right
+//            return true;
+//        }
+        if(type == WALL){
             return true;
         }
+
         return false;
     }
 
@@ -584,11 +589,65 @@ public class theRobot extends JFrame {
                                    //  new probabilities will show up in the probability map on the GUI
     }
 
+    double checkDirection(int deltaX, int deltaY, int currentX, int currentY, double[][] map) {
+        return map[currentX + deltaX][currentY + deltaY];
+    }
+
     // This is the function you'd need to write to make the robot move using your AI;
     // You do NOT need to write this function for this lab; it can remain as is
     int automaticAction() {
-        
-        return STAY;  // default action for now
+
+        //look at all adjacent squares (From the square with the highest prob of us being there)
+        // & choose the one with the highest utility- move there.
+        double highestProb = -1;
+        int highestProbX = 0;
+        int highestProbY = 0;
+
+        for (int y = 0; y < mundo.height; y++){
+            for (int x = 0; x < mundo.width; x++) {
+                if(probs[x][y] > highestProb){
+                 highestProbX = x;
+                 highestProbY = y;
+                 highestProb = probs[x][y];
+                }
+            }
+        }
+        double bestUtil = Double.NEGATIVE_INFINITY;
+        int bestDirection = -1;
+        //north is subtract 1 from X
+        //south is add 1 o y
+        //east is add 1 to X
+        //west is subtract 1 from X
+        if(mundo.grid[highestProbX][highestProbY - 1] != WALL) {  // Check NORTH
+            double result = checkDirection(0, -1, highestProbX, highestProbY, utilMap);
+            if(result > bestUtil) {
+                bestUtil = result;
+                bestDirection = NORTH;
+            }
+        }
+        if(mundo.grid[highestProbX][highestProbY + 1] != WALL) {  // Check SOUTH
+            double result = checkDirection(0, 1, highestProbX, highestProbY, utilMap);
+            if(result > bestUtil) {
+                bestUtil = result;
+                bestDirection = SOUTH;
+            }
+        }
+        if(mundo.grid[highestProbX + 1][highestProbY] != WALL) {  // Check EAST
+            double result = checkDirection(1, 0, highestProbX, highestProbY, utilMap);
+            if(result > bestUtil) {
+                bestUtil = result;
+                bestDirection = EAST;
+            }
+        }
+        if(mundo.grid[highestProbX - 1][highestProbY] != WALL) {  // Check WEST
+            double result = checkDirection(-1, 0, highestProbX, highestProbY, utilMap);
+            if(result > bestUtil) {
+                bestUtil = result;
+                bestDirection = WEST;
+            }
+        }
+        System.out.println("Best direction = " + bestDirection);
+        return bestDirection;  // default action for now
     }
 
     //floor = 0
@@ -637,36 +696,39 @@ public class theRobot extends JFrame {
                     if(y > 0) {  // check up
                         if(isPlayable(mundo.grid[x][y-1]) && utilMap[x][y-1] > OPEN_UTILITY + bestFutureUtility) {
                             bestFutureUtility = utilMap[x][y-1];
-                            updatedUtilities = true;
+//                            updatedUtilities = true;
                         }
                     }
 
                     if(x < mundo.width - 1) {  //check right
                         if(isPlayable(mundo.grid[x + 1][y]) && utilMap[x + 1][y] > bestFutureUtility) {
                             bestFutureUtility = utilMap[x + 1][y];
-                            updatedUtilities = true;
+//                            updatedUtilities = true;
                         }
                     }
 
                       if(x > 0) {  //check left
                         if(isPlayable(mundo.grid[x - 1][y]) && utilMap[x - 1][y] > OPEN_UTILITY + bestFutureUtility) {
                             bestFutureUtility = utilMap[x - 1][y];
-                            updatedUtilities = true;
+//                            updatedUtilities = true;
                         }
                     }
                     if(y < mundo.height - 1) {  // check down
                         if(isPlayable(mundo.grid[x][y+1]) && utilMap[x][y+1] > OPEN_UTILITY + bestFutureUtility) {
                             bestFutureUtility = utilMap[x][y+1];
-                            updatedUtilities = true;
+//                            updatedUtilities = true;
                         }
                     }
 
                     if(utilMap[x][y] > OPEN_UTILITY + bestFutureUtility) {  // check stay  // todo: do we need this?
                         bestFutureUtility = utilMap[x][y];
-                        updatedUtilities = true;
+//                        updatedUtilities = true;
                     }
 
-                    if(bestFutureUtility != Double.NEGATIVE_INFINITY) {  // If we found a better route (utility) then update our utility value
+
+                    //if best utility we've found is equal to the current untility, don't change.
+                    if(bestFutureUtility + OPEN_UTILITY > utilMap[x][y]) {  // If we found a better route (utility) then update our utility value
+                        updatedUtilities = true;
                         newUtilMap[x][y] = OPEN_UTILITY + bestFutureUtility;  // Add immediate and future reward (current has to be a floor space)
                     }
 
