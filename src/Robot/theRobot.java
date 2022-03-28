@@ -9,7 +9,9 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 // This class draws the probability map and value iteration map that you create to the window
 // You need only call updateProbs() and updateValues() from your theRobot class to update these maps
@@ -244,6 +246,14 @@ public class theRobot extends JFrame {
     public static final int EAST = 2;
     public static final int WEST = 3;
     public static final int STAY = 4;
+
+    public static final List<Integer> ACTIONS = new ArrayList<Integer>(){{
+        add(NORTH);
+        add(SOUTH);
+        add(EAST);
+        add(WEST);
+        add(STAY);
+    }};
 
 
     public static final int OPEN = 0;
@@ -596,7 +606,6 @@ public class theRobot extends JFrame {
     // This is the function you'd need to write to make the robot move using your AI;
     // You do NOT need to write this function for this lab; it can remain as is
     int automaticAction() {
-
         //look at all adjacent squares (From the square with the highest prob of us being there)
         // & choose the one with the highest utility- move there.
         double highestProb = -1;
@@ -663,6 +672,12 @@ public class theRobot extends JFrame {
     }
 
     void valueIteration() {
+//        U(s) = ImmediateReward(s) + (gama)*max( for action in moves:
+//            utility_by_action = 0
+//            for state in states:  # Go through the array
+//                utility_by_action = utility_by_action + P(s'|s,a) * U(s')
+//        )
+
         boolean updatedUtilities = true;
 
         for (int y = 0; y < mundo.height; y++) {
@@ -684,49 +699,37 @@ public class theRobot extends JFrame {
 
             double[][] newUtilMap = Arrays.stream(utilMap).map(double[]::clone).toArray(double[][]::new);
 
-            for (int y = 0; y < mundo.height; y++) {
+            for (int y = 0; y < mundo.height; y++) {  // We are pretending to be in this state
                 for (int x = 0; x < mundo.width; x++) {
-
                     double bestFutureUtility = Double.NEGATIVE_INFINITY;
 
-                    if(mundo.grid[x][y] != OPEN){ // Only update utility of of floors
+                    if(mundo.grid[x][y] != OPEN){ // Only update utility of the floors
                         continue;
                     }
 
-                    if(y > 0) {  // check up
-                        if(isPlayable(mundo.grid[x][y-1]) && utilMap[x][y-1] > OPEN_UTILITY + bestFutureUtility) {
-                            bestFutureUtility = utilMap[x][y-1];
-//                            updatedUtilities = true;
+                    for(int action : ACTIONS) {  // We pretend to make this action
+                        //sim move
+                        double futureUtility = 0;
+
+                        Pair<Integer, Integer> previousState = new Pair<>(x, y);
+
+                        for (int j = 0; j < mundo.height; j++) {  // We pretend to be in this state give our previous assumptions (where we were and what action we took)
+                            for (int i = 0; i < mundo.width; i++) {  // We can never be in a wall (and this bound checks for us)
+                                if(mundo.grid[i][j] == WALL){
+                                    continue;
+                                }
+
+                                Pair<Integer, Integer> destinationState = new Pair<>(i, j);
+                                futureUtility += transitionModel(destinationState, action, previousState) *  utilMap[destinationState.getKey()][destinationState.getValue()];
+                            }
+                        }
+
+                        if(futureUtility > bestFutureUtility){  // Find the best action to take (through future utility)
+                            bestFutureUtility = futureUtility;
                         }
                     }
 
-                    if(x < mundo.width - 1) {  //check right
-                        if(isPlayable(mundo.grid[x + 1][y]) && utilMap[x + 1][y] > bestFutureUtility) {
-                            bestFutureUtility = utilMap[x + 1][y];
-//                            updatedUtilities = true;
-                        }
-                    }
-
-                      if(x > 0) {  //check left
-                        if(isPlayable(mundo.grid[x - 1][y]) && utilMap[x - 1][y] > OPEN_UTILITY + bestFutureUtility) {
-                            bestFutureUtility = utilMap[x - 1][y];
-//                            updatedUtilities = true;
-                        }
-                    }
-                    if(y < mundo.height - 1) {  // check down
-                        if(isPlayable(mundo.grid[x][y+1]) && utilMap[x][y+1] > OPEN_UTILITY + bestFutureUtility) {
-                            bestFutureUtility = utilMap[x][y+1];
-//                            updatedUtilities = true;
-                        }
-                    }
-
-                    if(utilMap[x][y] > OPEN_UTILITY + bestFutureUtility) {  // check stay  // todo: do we need this?
-                        bestFutureUtility = utilMap[x][y];
-//                        updatedUtilities = true;
-                    }
-
-
-                    //if best utility we've found is equal to the current untility, don't change.
+                    // if best utility we've found is equal to the current untility, don't change.
                     if(bestFutureUtility + OPEN_UTILITY > utilMap[x][y]) {  // If we found a better route (utility) then update our utility value
                         updatedUtilities = true;
                         newUtilMap[x][y] = OPEN_UTILITY + bestFutureUtility;  // Add immediate and future reward (current has to be a floor space)
@@ -743,7 +746,7 @@ public class theRobot extends JFrame {
     void doStuff() {
         int action;
         
-        valueIteration();  // TODO: function you will write in Part II of the lab
+        valueIteration();  // Fill out the utility vector through value iteration
         initializeProbabilities();  // Initializes the location (probability) map
         
         while (true) {
@@ -751,8 +754,7 @@ public class theRobot extends JFrame {
                 if (isManual)
                     action = getHumanAction();  // get the action selected by the user (from the keyboard)
                 else
-                    action = automaticAction(); // TODO: get the action selected by your AI;
-                                                // you'll need to write this function for part III
+                    action = automaticAction(); // have the computer select an action
                 
                 sout.println(action); // send the action to the Server
                 
