@@ -490,13 +490,12 @@ public class theRobot extends JFrame {
     }
 
     boolean typesMatch(int type1, int type2){
-        if(type1 == type2){ // Both walls or both open
+        if((type1 == WALL && type2 == WALL) || (type1 != WALL && type2 != WALL)){ // Both walls or both open
             return true;
         }
-        if(type1 == OPEN && (type2 == TRAP || type2 == GOAL)){ // OPEN includes GOAL and WALL
-            return true;
+        else{
+            return false;
         }
-        return false;
     }
 
     boolean impossiblePosition(Pair<Integer, Integer> position){
