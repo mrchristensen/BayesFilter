@@ -6,14 +6,35 @@ have a probability of misbehaving, adding randomness to the model.
 
 We use Bayes Rule to create positional probabilities that are updated after each action are taken.
 Used are a combination of the transition model (to probability of moving to a new square given previous positional
-probabilities — ```p(xₜ | aₜ, xₜ₋₁)```), and a sensor model (which updates the probability with the likelihood that a given position matches
-the observed sensor readings — ```p(zₜ | xₜ)```), to figure out where the robot is in the world.
+probabilities — ```p(xₜ | aₜ, xₜ₋₁)```), and a sensor model (which updates the probability with the likelihood that a
+given position matches the observed sensor readings — ```p(zₜ | xₜ)```), to figure out where the robot is in the world.
 
 ![](https://github.com/mrchristensen/BayesFilter/blob/master/images/BayesFilter.PNG)
 
 Here, ```Bel(Xₜ₋₁)``` is the robot’s beliefs about where it is in the world (over its possible set of states ```Xₜ₋₁```),
 at is the action taken at time ```ₜ```, and ```zₜ``` is the sonar reading taken after moving in time ```ₜ```. Also, the
 variable ```η```, is a normalization factor, as ```Bel(xₜ)``` will not define a legal probability distribution.
+
+# Value Iteration
+Additionally, the robot is able to move on its own by making action decisions through a value iteration algorithm.
+The value iteration algorithm is a Markov Decision Process (MDP), where each state is given a utility based of off a
+current and future reward.  Specific to the value iteration implementation of the MDP, we introduce a function ```π```,
+which decreases the value of utility over time (which guarantees that utilities will never grow to infinity).
+
+![](https://github.com/mrchristensen/BayesFilter/blob/master/images/value%20iteration.svg)
+
+Here, ```Pₔ(s,s')``` represents the probability of getting to state ```s'``` from ```s``` with the action ```ₔ```,
+```Rₔ(s,s')``` represents the utility function/value for state ```s``` (we use a simplified model that doesn't require ```s'```),
+and ```π Vᵢ(s')``` represents the implied future reward of moving to state ```s'```, with the damping factor of ```π```
+(with ```ᵢ``` representing the current iteration).
+
+We iteratively apply this algorithm until the utility map is not updated (in which case we have finish).
+
+The algorithm finds the space with the highest probability, and then checks which action would move the robot to the
+state with the highest utility.
+
+For this project, we chose to give open spaces an immediate reward utility value of -1, stairwells a value of -10000,
+and the goal a value of 10000.
 
 # Recordings
 
