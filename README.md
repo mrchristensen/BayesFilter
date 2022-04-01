@@ -17,17 +17,19 @@ variable ```η```, is a normalization factor, as ```Bel(xₜ)``` will not define
 
 # Recordings
 
+## Manual (player inputted decisions):
+
 ### mundo_maze.txt .95 .9 unknown
-![](https://github.com/mrchristensen/BayesFilter/blob/master/images/mundo_maze.txt%20.95%20.9%20unknown.gif)
+![](https://github.com/mrchristensen/BayesFilter/blob/master/images/manual/mundo_maze.txt%20.95%20.9%20unknown.gif)
 
 ### mundo_maze2.txt .8 .8 unknown
-![](https://github.com/mrchristensen/BayesFilter/blob/master/images/mundo_maze2.txt%20.8%20.8%20unknown.gif)
+![](https://github.com/mrchristensen/BayesFilter/blob/master/images/manual/mundo_maze2.txt%20.8%20.8%20unknown.gif)
 
 ### mundo_15_15.txt .9 .9 unknown
-![](https://github.com/mrchristensen/BayesFilter/blob/master/images/mundo_15_15.txt%20.9%20.9%20unknown.gif)
+![](https://github.com/mrchristensen/BayesFilter/blob/master/images/manual/mundo_15_15.txt%20.9%20.9%20unknown.gif)
 
 ### mundo_30_30.txt .85 .8 unknown
-![](https://github.com/mrchristensen/BayesFilter/blob/master/images/mundo_30_30.txt%20.85%20.8%20unknown.gif)
+![](https://github.com/mrchristensen/BayesFilter/blob/master/images/manual/mundo_30_30.txt%20.85%20.8%20unknown.gif)
 
 
 # How to run:
