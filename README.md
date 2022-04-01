@@ -4,7 +4,7 @@ The robot is able to move (north, south, east, west) or stay in place and also h
 to sense if there is a wall nearby (in front, behind, left, or right).  However, movement and sensors
 have a probability of misbehaving, adding randomness to the model.
 
-We use Bayes Rule to create positional probabilities that are updated after each action are taken.
+We use [Bayes Rule](https://en.wikipedia.org/wiki/Bayes%27_theorem) to create positional probabilities that are updated after each action are taken.
 Used are a combination of the transition model (to probability of moving to a new square given previous positional
 probabilities — ```p(xₜ | aₜ, xₜ₋₁)```), and a sensor model (which updates the probability with the likelihood that a
 given position matches the observed sensor readings — ```p(zₜ | xₜ)```), to figure out where the robot is in the world.
@@ -16,8 +16,8 @@ at is the action taken at time ```ₜ```, and ```zₜ``` is the sonar reading ta
 variable ```η```, is a normalization factor, as ```Bel(xₜ)``` will not define a legal probability distribution.
 
 # Value Iteration
-Additionally, the robot is able to move on its own by making action decisions through a value iteration algorithm.
-The value iteration algorithm is a Markov Decision Process (MDP), where each state is given a utility based of off a
+Additionally, the robot is able to move on its own by making action decisions through a [value iteration algorithm](https://en.wikipedia.org/wiki/Markov_decision_process#Value_iteration).
+The value iteration algorithm is a [Markov Decision Process](https://en.wikipedia.org/wiki/Markov_decision_process) (MDP), where each state is given a utility based of off a
 current and future reward.  Specific to the value iteration implementation of the MDP, we introduce a function ```π```,
 which decreases the value of utility over time (which guarantees that utilities will never grow to infinity).
 
@@ -79,14 +79,14 @@ the start of the simulation.
 Client: ```java theRobot [manual/automatic] [decisionDelay]``` (For example, ```java theRobot manual 0```)
 
 The “manual” param specifies that the user (you) will specify the robot’s actions, “automatic” specifies that
-the robot will control it’s own actions, and [decisionDelay] is a time in milliseconds used to slow
+the robot will control its own actions, and [decisionDelay] is a time in milliseconds used to slow
 down the robot’s movements when it chooses automatically (so you can see it move). In manual mode,
-you press keys to have the robot move when the client GUI window is active. ‘i’ is up, ‘,’ is down, ‘j’ is
-left, ‘l’ is right, and ‘k’ is stay. Note that the client GUI must be the active window in order for the key
+you press keys to have the robot move when the client GUI window is active. ```i``` is up, ```,``` is down, ```j``` is
+left, ```l``` is right, and ```k``` is stay. Note that the client GUI must be the active window in order for the key
 commands to work.
 
 
-## Remember
+## Dev Notes
 
 0's are open
 1's are walls
