@@ -21,7 +21,7 @@ The value iteration algorithm is a [Markov Decision Process](https://en.wikipedi
 current and future reward.  Specific to the value iteration implementation of the MDP, we introduce a function ```π```,
 which decreases the value of utility over time (which guarantees that utilities will never grow to infinity).
 
-![](https://github.com/mrchristensen/BayesFilter/blob/master/images/value%20iteration.svg)
+![](https://github.com/mrchristensen/BayesFilter/blob/master/images/value%20iteration.jpg)
 
 Here, ```Pₔ(s,s')``` represents the probability of getting to state ```s'``` from ```s``` with the action ```ₔ```,
 ```Rₔ(s,s')``` represents the utility function/value for state ```s``` (we use a simplified model that doesn't require ```s'```),
